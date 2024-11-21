@@ -8,6 +8,10 @@ from app.services.transformer import transform_data
 router = APIRouter()
 limiter = Limiter(key_func=lambda x: "global")
 
+@router.get("/")
+def read_root(resuest: Request):
+    return {"Hello": "World"}
+
 @router.post("/upload", tags=["File Upload"])
 @limiter.limit("5/minute")  # Limit to 5 requests per minute
 async def upload_file(request: Request, file: UploadFile):
