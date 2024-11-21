@@ -20,7 +20,7 @@ async def read_root(request: Request):
     Renders the homepage with a simple greeting and frontend.
     """
     # Return the index.html template
-    return templates.TemplateResponse("./templates/index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @router.post("/upload", tags=["File Upload"])
 @limiter.limit("5/minute")  # Limit to 5 requests per minute
