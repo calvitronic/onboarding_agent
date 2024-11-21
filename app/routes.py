@@ -35,7 +35,7 @@ async def upload_file(request: Request, file: UploadFile):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 @router.get("/health", tags=["Health"])
-async def health_check():
+async def health_check(request: Request):
     """
     Health check endpoint.
     """
@@ -43,7 +43,7 @@ async def health_check():
 
 @router.get("/rate-limit-test", tags=["Test"])
 @limiter.limit("1/second")  # Test endpoint with rate limiting
-async def rate_limit_test():
+async def rate_limit_test(request: Request):
     """
     Test endpoint to verify rate limiting is functional.
     """
