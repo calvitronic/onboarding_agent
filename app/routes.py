@@ -15,7 +15,7 @@ router = APIRouter()
 limiter = Limiter(key_func=lambda x: "global")
 
 @router.post("/upload", tags=["File Upload"])
-@limiter.limit("5/minute")  # Limit to 5 requests per minute
+@limiter.limit("5/minute", key_func=lambda request: request.client.host)  # Limit to 5 requests per minute
 async def upload_file(request: Request, file: UploadFile):
     """
     Endpoint to upload and process a file.
@@ -53,7 +53,7 @@ async def health_check(request: Request):
     return {"status": "ok", "message": "Service is running"}
 
 @router.get("/rate-limit-test", tags=["Test"])
-@limiter.limit("1/second")  # Test endpoint with rate limiting
+@limiter.limit("1/second", key_func=lambda request: request.client.host)  # Test endpoint with rate limiting
 async def rate_limit_test(request: Request):
     """
     Test endpoint to verify rate limiting is functional.
