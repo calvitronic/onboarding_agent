@@ -6,7 +6,7 @@ class CustomerData(BaseModel):
     customer_id: int = Field(..., gt=0, description="Unique customer ID")
     name: str = Field(..., min_length=1, max_length=100, description="Customer name")
     email: EmailStr = Field(..., description="Customer email address")
-    signup_date: str = Field(..., regex=r"\d{4}-\d{2}-\d{2}", description="Signup date in YYYY-MM-DD format")
+    signup_date: str = Field(..., pattern=1r"\d{4}-\d{2}-\d{2}", description="Signup date in YYYY-MM-DD format")
     is_active: Optional[bool] = Field(default=True, description="Is the customer active")
 
 # Validation Function
