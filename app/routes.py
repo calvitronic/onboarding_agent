@@ -7,7 +7,10 @@ from app.services.file_handler import process_file
 from app.services.data_validator import validate_data
 from app.services.transformer import transform_data
 
+# Initialize Jinja2 template renderer
 templates = Jinja2Templates(directory="templates")
+
+# Initialize the router and rate limiter
 router = APIRouter()
 limiter = Limiter(key_func=lambda x: "global")
 
@@ -39,10 +42,13 @@ async def upload_file(request: Request, file: UploadFile):
         return {"status": "success", "data": transformed_data}
 
     except RateLimitExceeded as re:
+        # Handle rate limiting error
         raise HTTPException(status_code=429, detail="Limited to 5 requests per minute")
     except ValueError as ve:
+        # Handle validation errors
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
+        # General error handler
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 @router.get("/health", tags=["Health"])
