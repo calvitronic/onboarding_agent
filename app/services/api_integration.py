@@ -19,7 +19,7 @@ async def send_data_to_saas_api(data: list):
     
     headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
     async with aiohttp.ClientSession() as session:
-        async with session.post(SAAS_API_URL, json=data, headers=headers) as response:
+        async with session.post(f"{SAAS_API_URL}/upload", json=data, headers=headers) as response:
             if response.status != 200:
                 error_message = await response.text()
                 logger.error(f"API Error: {response.status} - {error_message}")

@@ -1,11 +1,11 @@
 from fastapi import APIRouter, UploadFile, Request, HTTPException
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import HTMLResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import Limiter
 from app.services.file_handler import process_file
 from app.services.data_validator import validate_data
 from app.services.transformer import transform_data
+from app.services.api_integration import send_data_to_saas_api
 
 # Initialize Jinja2 template renderer
 templates = Jinja2Templates(directory="../templates")
@@ -30,6 +30,8 @@ async def upload_file(request: Request, file: UploadFile):
 
         # Step 3: Transform data
         # transformed_data = await transform_data(validatsed_data)
+
+        await send_data_to_saas_api(raw_data)
 
         return {"status": "success", "data": raw_data}
 
