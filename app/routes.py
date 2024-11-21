@@ -1,16 +1,23 @@
 from fastapi import APIRouter, UploadFile, Request, HTTPException
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import Limiter
 from app.services.file_handler import process_file
 from app.services.data_validator import validate_data
 from app.services.transformer import transform_data
 
+templates = Jinja2Templates(directory="templates")
 router = APIRouter()
 limiter = Limiter(key_func=lambda x: "global")
 
-@router.get("/")
-def read_root(resuest: Request):
-    return {"Hello": "World"}
+@router.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    """
+    Renders the homepage with a simple greeting and frontend.
+    """
+    # Return the index.html template
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @router.post("/upload", tags=["File Upload"])
 @limiter.limit("5/minute")  # Limit to 5 requests per minute
