@@ -8,7 +8,7 @@ from app.services.data_validator import validate_data
 from app.services.transformer import transform_data
 
 # Initialize Jinja2 template renderer
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="../templates")
 
 # Initialize the router and rate limiter
 router = APIRouter()
