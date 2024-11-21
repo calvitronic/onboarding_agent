@@ -6,6 +6,11 @@ from app.services.file_handler import process_file
 from app.services.data_validator import validate_data
 from app.services.transformer import transform_data
 from app.services.api_integration import send_data_to_saas_api
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 # Initialize Jinja2 template renderer
 templates = Jinja2Templates(directory="../templates")
@@ -22,28 +27,34 @@ async def upload_file(request: Request, file: UploadFile):
     Supports CSV, Excel, PDF, DOCX, and JSON file types.
     """
     try:
+        logger.debug("Received request to upload file.")
+        
         # Step 1: Extract data
+        logger.debug(f"Processing file: {file.filename}")
         raw_data = await process_file(file)
-
-        # Step 2: Validate data
+        logger.debug(f"Extracted raw data from {file.filename}: {raw_data}")
+        
+        # Step 2: Validate data (Commented out for now)
+        # logger.debug("Validating data...")
         # validated_data = await validate_data(raw_data)
-
-        # Step 3: Transform data
-        # transformed_data = await transform_data(validatsed_data)
-
+        # logger.debug(f"Validated data: {validated_data}")
+        
+        # Step 3: Transform data (Commented out for now)
+        # logger.debug("Transforming data...")
+        # transformed_data = await transform_data(validated_data)
+        # logger.debug(f"Transformed data: {transformed_data}")
+        
+        # Send data to the mock SaaS API
+        logger.debug("Sending data to SaaS API...")
         await send_data_to_saas_api(raw_data)
-
+        logger.debug("Data successfully sent to SaaS API.")
+        
         return {"status": "success", "data": raw_data}
 
-    except RateLimitExceeded as re:
-        # Handle rate limiting error
-        raise HTTPException(status_code=429, detail="Limited to 5 requests per minute")
-    except ValueError as ve:
-        # Handle validation errors
-        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        # General error handler
-        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+        # Log the error and return a user-friendly message
+        logger.error(f"Error during file processing: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An error occurred while processing the file.")
 
 @router.get("/health", tags=["Health"])
 async def health_check(request: Request):
