@@ -14,14 +14,6 @@ templates = Jinja2Templates(directory="../templates")
 router = APIRouter()
 limiter = Limiter(key_func=lambda x: "global")
 
-@router.get("/", response_class=HTMLResponse)
-async def read_root(request: Request):
-    """
-    Renders the homepage with a simple greeting and frontend.
-    """
-    # Return the index.html template
-    return templates.TemplateResponse("index.html", {"request": request})
-
 @router.post("/upload", tags=["File Upload"])
 @limiter.limit("5/minute")  # Limit to 5 requests per minute
 async def upload_file(request: Request, file: UploadFile):
@@ -34,12 +26,12 @@ async def upload_file(request: Request, file: UploadFile):
         raw_data = await process_file(file)
 
         # Step 2: Validate data
-        validated_data = await validate_data(raw_data)
+        # validated_data = await validate_data(raw_data)
 
         # Step 3: Transform data
-        transformed_data = await transform_data(validated_data)
+        # transformed_data = await transform_data(validatsed_data)
 
-        return {"status": "success", "data": transformed_data}
+        return {"status": "success", "data": raw_data}
 
     except RateLimitExceeded as re:
         # Handle rate limiting error

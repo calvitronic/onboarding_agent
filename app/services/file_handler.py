@@ -1,24 +1,26 @@
+from fastapi import UploadFile
 from io import BytesIO
+from pathlib import Path
 import pandas as pd
 import pdfplumber
 from docx import Document
 import json
 
-ALLOWED_FILE_TYPES = ["csv", "xlsx", "pdf", "docx", "json"]
+ALLOWED_FILE_TYPES = [".csv", ".xlsx", ".xls", ".pdf", ".docx", ".json"]
 MAX_FILE_SIZE = 5 * 1024 * 1024
 
-async def process_file(file):
-    file_extension = file.filename.split(".")[-1].lower()
+async def process_file(file: UploadFile):
+    file_extension = Path(file.filename).suffix.lower()
 
-    if file_extension == "csv":
+    if file_extension == ".csv":
         return await extract_from_csv(file)
-    elif file_extension == "xlsx":
+    elif file_extension in [".xlsx", ".xls"]:
         return await extract_from_excel(file)
-    elif file_extension == "pdf":
+    elif file_extension == ".pdf":
         return await extract_from_pdf(file)
-    elif file_extension == "docx":
+    elif file_extension == ".docx":
         return await extract_from_docx(file)
-    elif file_extension == "json":
+    elif file_extension == ".json":
         return await extract_from_json(file)
     else:
         raise ValueError("Unsupported file type.")
