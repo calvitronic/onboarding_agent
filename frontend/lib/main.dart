@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  // Ensure that the app waits for the environment variables to load
+  await dotenv.load();
   runApp(MyApp());
 }
 
@@ -34,11 +37,12 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
   Future<void> uploadFile() async {
     // Open file picker
     FilePickerResult? result = await FilePicker.platform.pickFiles();
+    String apiUrl = dotenv.env['BACKEND_URL'] ?? 'https://default-api-url.com';
 
     if (result != null) {
       // Get the selected file
       PlatformFile file = result.files.first;
-      
+
       // Check if the platform is web
       if (html.window.navigator.userAgent.contains('Chrome')) {
         // For web: use bytes property (because `path` is null on web)
@@ -47,7 +51,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
         if (bytes != null) {
           // Prepare multipart request for web
           var request = http.MultipartRequest(
-              'POST', Uri.parse('https://onboarding-agent-f2d8f7faa9f8.herokuapp.com/upload'));
+              'POST', Uri.parse("$apiUrl/upload"));
 
           // Add the file to the request as a byte stream
           request.files.add(http.MultipartFile.fromBytes(
@@ -120,7 +124,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
                 onPressed: () async {
                   await uploadFile();
                 },
-                child: Text('Pick and Upload File'),
+                child: Text('Upload File'),
               ),
               SizedBox(height: 20),
               Text(

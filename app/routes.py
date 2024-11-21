@@ -1,5 +1,4 @@
 from fastapi import APIRouter, UploadFile, Request, HTTPException
-from fastapi.templating import Jinja2Templates
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import Limiter
 from app.services.file_handler import process_file
@@ -11,9 +10,6 @@ import logging
 # Set up logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-# Initialize Jinja2 template renderer
-templates = Jinja2Templates(directory="../templates")
 
 # Initialize the router and rate limiter
 router = APIRouter()
