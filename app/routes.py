@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, Request, HTTPException
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import Limiter
 from app.services.file_handler import process_file
@@ -10,7 +10,7 @@ limiter = Limiter(key_func=lambda x: "global")
 
 @router.post("/upload", tags=["File Upload"])
 @limiter.limit("5/minute")  # Limit to 5 requests per minute
-async def upload_file(file: UploadFile):
+async def upload_file(request: Request, file: UploadFile):
     """
     Endpoint to upload and process a file.
     Supports CSV, Excel, PDF, DOCX, and JSON file types.
@@ -27,6 +27,8 @@ async def upload_file(file: UploadFile):
 
         return {"status": "success", "data": transformed_data}
 
+    except RateLimitExceeded as re:
+        raise HTTPException(status_code=429, detail="Limited to 5 requests per minute")
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
