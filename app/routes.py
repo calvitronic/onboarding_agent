@@ -2,8 +2,7 @@ from fastapi import APIRouter, UploadFile, Request, HTTPException
 from slowapi.errors import RateLimitExceeded
 from slowapi.extension import Limiter
 from app.services.file_handler import process_file
-from app.services.data_validator import validate_data
-from app.services.transformer import transform_data
+from app.services.data_validator import analyze_and_fill_data
 from app.services.api_integration import send_data_to_saas_api
 import logging
 
@@ -15,6 +14,14 @@ logger.setLevel(logging.DEBUG)
 router = APIRouter()
 limiter = Limiter(key_func=lambda x: "global")
 
+# Define Validation Schema
+validation_scheme = "class CustomerData(BaseModel): \
+    customer_id: int = Field(..., gt=0, description=\"Unique customer ID\") \
+    name: str = Field(..., min_length=1, max_length=100, description=\"Customer name\") \
+    email: EmailStr = Field(..., description=\"Customer email address\") \
+    signup_date: str = Field(..., pattern=r\"\d{4}-\d{2}-\d{2}\", description=\"Signup date in YYYY-MM-DD format\") \
+    is_active: Optional[bool] = Field(default=True, description=\"Is the customer active\")"
+
 @router.post("/upload", tags=["File Upload"])
 @limiter.limit("5/minute", key_func=lambda request: request.client.host)  # Limit to 5 requests per minute
 async def upload_file(request: Request, file: UploadFile):
@@ -23,30 +30,31 @@ async def upload_file(request: Request, file: UploadFile):
     Supports CSV, Excel, PDF, DOCX, and JSON file types.
     """
     try:
-        logger.debug("Received request to upload file.")
+        print("Received request to upload file.")
         
         # Step 1: Extract data
-        logger.debug(f"Processing file: {file.filename}")
+        print(f"Processing file: {file.filename}")
         raw_data = await process_file(file)
-        logger.debug(f"Extracted raw data from {file.filename}: {raw_data}")
+        print(f"Extracted raw data from {file.filename}: {raw_data}")
         
-        # Step 2: Validate data (Commented out for now)
-        # logger.debug("Validating data...")
-        # validated_data = await validate_data(raw_data)
-        # logger.debug(f"Validated data: {validated_data}")
-        
-        # Step 3: Transform data (Commented out for now)
-        # logger.debug("Transforming data...")
-        # transformed_data = await transform_data(validated_data)
-        # logger.debug(f"Transformed data: {transformed_data}")
+        #Step 2: Validate data
+        print("Validating data...")
+        validated_data = await analyze_and_fill_data(raw_data, validation_scheme)
+        print(f"Validated data: {validated_data}")
         
         # Send data to the mock SaaS API
-        logger.debug("Sending data to SaaS API...")
-        await send_data_to_saas_api(raw_data)
-        logger.debug("Data successfully sent to SaaS API.")
+        print("Sending data to SaaS API...")
+        await send_data_to_saas_api(validated_data)
+        print("Data successfully sent to SaaS API.")
         
-        return {"status": "success", "data": raw_data}
-
+        return {
+            "status": "success",
+            "message": "File processed successfully.",
+            "validated_data": validated_data,
+        }
+    except RateLimitExceeded as re:
+        logger.error(f"Error during file processing: {re}", exc_info=True)
+        raise HTTPException(status_code=429, detail="Too many requests: only 5 per minute allowed.")
     except Exception as e:
         # Log the error and return a user-friendly message
         logger.error(f"Error during file processing: {e}", exc_info=True)

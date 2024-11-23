@@ -1,26 +1,37 @@
-from pydantic import BaseModel, Field, EmailStr, ValidationError
-from typing import List, Optional
+from openai import OpenAI
+import os
+from dotenv import load_dotenv
+import json
 
-# Define Validation Schema
-class CustomerData(BaseModel):
-    customer_id: int = Field(..., gt=0, description="Unique customer ID")
-    name: str = Field(..., min_length=1, max_length=100, description="Customer name")
-    email: EmailStr = Field(..., description="Customer email address")
-    signup_date: str = Field(..., pattern=r"\d{4}-\d{2}-\d{2}", description="Signup date in YYYY-MM-DD format")
-    is_active: Optional[bool] = Field(default=True, description="Is the customer active")
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
+
+# Load the appropriate .env file
+if ENVIRONMENT == 'production':
+    load_dotenv('.env.prod')
+else:
+    load_dotenv('.env.dev')
+
+client = OpenAI(
+  organization='org-El5mKTVBrUsQwWsmK2v1V7t8',
+  project='proj_HEG9R3MNHvaBJoNSPzh4dwvx',
+  api_key=os.getenv("OPENAI_KEY")
+)
 
 # Validation Function
-async def validate_data(rows: List[dict]) -> List[dict]:
-    validated_data = []
-    errors = []
+async def analyze_and_fill_data(data, schema):
+    prompt = f"""
+    Given the following schema: {schema},
+    Analyze the record: {data},
+    Fill in missing values of the schema using the above record as necessary.
+    Output ONLY the completed record (with any missing values set to null) in JSON_string format.
+    """
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": "You are a data analyzer."},
+                    {"role": "user", "content": prompt}],
+        )
+    except ValueError as ve:
+        print(f"Error: {ve}")
 
-    for i, row in enumerate(rows):
-        try:
-            validated_data.append(CustomerData(**row).model_dump())
-        except ValidationError as e:
-            errors.append({"row": i + 1, "errors": e.errors()})
-    
-    if errors:
-        raise ValueError(f"Validation failed: {errors}")
-
-    return validated_data
+    return response.choices[0].message.content

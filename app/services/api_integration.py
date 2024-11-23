@@ -1,27 +1,34 @@
-from fastapi import HTTPException
 import aiohttp
 from retrying import retry
-import logging
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
-logger = logging.getLogger(__name__)
+# Load the appropriate .env file
+if ENVIRONMENT == 'production':
+    load_dotenv('.env.prod')
+else:
+    load_dotenv('.env.dev')
 
 # Helper Function: Retryable API Call
 @retry(wait_exponential_multiplier=1000, stop_max_attempt_number=3)
 async def send_data_to_saas_api(data: list):
-    SAAS_API_URL = os.getenv("MOCKOON_URL")  # Replace with the actual mock URL
-    API_KEY = os.getenv("API_KEY")
-    if not (API_KEY and SAAS_API_URL):
+    POSTMAN_KEY = os.getenv("POSTMAN_KEY")
+    POSTMAN_URL = os.getenv("POSTMAN_URL")  # Replace with the actual mock URL
+    if not (POSTMAN_KEY and POSTMAN_URL):
         raise ValueError("SAAS_API_URL or API_KEY is not set in the environment")
     
-    headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+    payload = {"CustomerData": data}  # Replace with your payload
+    headers = {
+        "Content-Type": "application/json",  # Specify JSON content type
+        "x-api-key": POSTMAN_KEY  # Add the API key to the headers
+    }
     async with aiohttp.ClientSession() as session:
-        async with session.post(f"{SAAS_API_URL}/upload", json=data, headers=headers) as response:
-            if response.status != 200:
+        async with session.post(f"{POSTMAN_URL}/upload", json=payload, headers=headers) as response:
+            if response.status == 200:
+                response_data = await response.json()
+                print("Success:", response_data)
+            else:
                 error_message = await response.text()
-                logger.error(f"API Error: {response.status} - {error_message}")
-                raise HTTPException(status_code=502, detail="Error communicating with SaaS API.")
-            return await response.json()
+                print(f"Error: {response.status} - {error_message}")

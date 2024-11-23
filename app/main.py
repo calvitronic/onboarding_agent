@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import router as main_router
+from app.routes import router as main_router
+
 
 # Create FastAPI app
 app = FastAPI(
@@ -24,3 +25,8 @@ app.add_middleware(
 )
 
 app.include_router(main_router)
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
