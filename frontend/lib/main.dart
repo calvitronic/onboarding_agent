@@ -49,8 +49,9 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
           var response = await request.send();
 
           if (response.statusCode == 200) {
+            String responseBody = await response.stream.bytesToString();
             setState(() {
-              _responseMessage = "File uploaded successfully! Data: ${response.stream.toString()}";
+              _responseMessage = responseBody;
             });
           } else {
             setState(() {
