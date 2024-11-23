@@ -51,7 +51,7 @@ async def upload_file(request: Request, file: UploadFile):
             "status": "success",
             "message": "File processed successfully.",
             "validated_data": validated_data,
-        }
+        } 
     except RateLimitExceeded as re:
         logger.error(f"Error during file processing: {re}", exc_info=True)
         raise HTTPException(status_code=429, detail="Too many requests: only 5 per minute allowed.")
