@@ -3,21 +3,15 @@ from retrying import retry
 import os
 from dotenv import load_dotenv
 
-ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
-
-# Load the appropriate .env file
-if ENVIRONMENT == 'production':
-    load_dotenv('.env.prod')
-else:
-    load_dotenv('.env.dev')
+load_dotenv()
 
 # Helper Function: Retryable API Call
 @retry(wait_exponential_multiplier=1000, stop_max_attempt_number=3)
-async def send_data_to_saas_api(data: list):
+async def send_data_to_saas_api(data):
     POSTMAN_KEY = os.getenv("POSTMAN_KEY")
     POSTMAN_URL = os.getenv("POSTMAN_URL")  # Replace with the actual mock URL
     if not (POSTMAN_KEY and POSTMAN_URL):
-        raise ValueError("SAAS_API_URL or API_KEY is not set in the environment")
+        raise ValueError("POSTMAN_URL and/or POSTMAN_KEY not set in the environment.")
     
     payload = {"CustomerData": data}  # Replace with your payload
     headers = {

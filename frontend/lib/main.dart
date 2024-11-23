@@ -1,20 +1,8 @@
-// Only for mobile platforms
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
-  const environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'development');
-
-  // Load the appropriate .env file
-  if (environment == 'production') {
-    await dotenv.load(fileName: ".env.prod");
-  } else {
-    await dotenv.load(fileName: ".env.dev");
-  }
   runApp(const MyApp());
 }
 
@@ -45,7 +33,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
   Future<void> uploadFile() async {
     // Let user pick a file
     FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ["csv", "xlsx", "xls", "pdf", "docx", "json"]);
-    final String backendUrl = dotenv.env['BACKEND_URL'] ?? 'Unknown';
+    const String backendUrl = "https://onboarding-agent-f2d8f7faa9f8.herokuapp.com";
 
     if (result != null) {
       // Get the selected file
@@ -61,22 +49,9 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
           var response = await request.send();
 
           if (response.statusCode == 200) {
-            // Parse the response body
-            String responseBody = await response.stream.bytesToString();
-            var responseData = jsonDecode(responseBody); // Decode JSON
-
-            // Extract the validated data
-            if (responseData['status'] == 'success') {
-              var validatedData = responseData['validated_data'];
-
-              setState(() {
-                _responseMessage = "File uploaded successfully!\n\nValidated Data:\n$validatedData";
-              });
-            } else {
-              setState(() {
-                _responseMessage = "Upload failed: ${responseData['message']}";
-              });
-            }
+            setState(() {
+              _responseMessage = "File uploaded successfully! Data: ${response.stream.toString()}";
+            });
           } else {
             setState(() {
               _responseMessage = "Upload failed: ${response.statusCode}";

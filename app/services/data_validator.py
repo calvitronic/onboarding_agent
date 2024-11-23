@@ -3,13 +3,7 @@ import os
 from dotenv import load_dotenv
 import json
 
-ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
-
-# Load the appropriate .env file
-if ENVIRONMENT == 'production':
-    load_dotenv('.env.prod')
-else:
-    load_dotenv('.env.dev')
+load_dotenv()
 
 client = OpenAI(
   organization='org-El5mKTVBrUsQwWsmK2v1V7t8',
